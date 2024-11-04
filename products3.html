@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products Filter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <style>
+        .filter-section {
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        select, button {
+            padding: 8px 16px;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #144a8d;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0c3366;
+        }
+
+        #filtered_products {
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .filtered-item {
+            padding: 10px;
+            margin: 5px 0;
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .products {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 20px;
+            font-family: initial;
+            background-color: #f9fcfc;
+        }
+
+        .product {
+            display: block;
+            width: 300px;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .name {
+            display: block;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #150e2e;
+            margin-bottom: 10px;
+        }
+
+        .description {
+            display: block;
+            color: #031b11;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .price::before {
+            content: "$";
+        }
+
+        .price {
+            display: block;
+            color: #144a8d;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .category {
+            display: inline-block;
+            padding: 4px 8px;
+            background-color: #acc2af;
+            border-radius: 4px;
+            color: #0c46a3;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <h1>Products Filter</h1>
+    
+    <div class="filter-section">
+        <select id="category_select">
+            <option value="">Select a category</option>
+        </select>
+        <button id="filter_button">Filter</button>
+    </div>
+
+    <div id="filtered_products"></div>
+    <div id="products_container" class="products"></div>
+
+    <script>
+            $(document).ready(function() {
+            let products_data = [];
+            
+            // Load the JSON data
+            $.get('products.json', function(data) {
+                products_data = data;
+                display_products(data);
+                populate_categories(data);
+            })
+            
+
+            // Populate categories dropdown
+            function populate_categories(products) {
+                const categories = new Set();
+                products.forEach(product => {
+                    product.categories.forEach(category => categories.add(category));
+                });
+                
+                const category_select = $('#category_select');
+                Array.from(categories).sort().forEach(category => {
+                    category_select.append($('<option>').val(category).text(category));
+                });
+            }
+
+            // Display all products
+            function display_products(products) {
+                const container = $('#products_container');
+                container.empty();
+                
+                products.forEach(product => {
+                    const product_element = $('<div>').addClass('product');
+                    
+                    product_element.append(
+                        $('<div>').addClass('name').text(product.name),
+                        $('<div>').addClass('description').text(product.description),
+                        $('<div>').addClass('price').text(product.price.toFixed(2)),
+                        $('<div>').addClass('categories').append(
+                            product.categories.map(cat => 
+                                $('<span>').addClass('category').text(cat)
+                            )
+                        )
+                    );
+                    
+                    container.append(product_element);
+                });
+            }
+
+            // Filter button click handler
+            $('#filterButton').click(function() {
+                const selected_category = $('#category_select').val();
+                const filtered_div = $('#filtered_products');
+                filtered_div.empty();
+
+                if (selected_category) {
+                    const filtered_products = products_data.filter(product => 
+                        product.categories.includes(selected_category)
+                    );
+
+                    if (filtered_products.length > 0) {
+                        filtered_products.forEach(product => {
+                            filtered_div.append(
+                                $('<div>').addClass('filtered-item')
+                                    .text(product.name)
+                            );
+                        });
+                    } else {
+                        filtered_div.append($('<p>').text('No products found in this category.'));
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
